@@ -1,7 +1,7 @@
 function [modelParameters] = positionEstimatorTraining(training_data)
 
 modelParameters = struct();
-modelParameters.weights = rand(98,4); % different parameters for each dimension
+modelParameters.weights = rand(98,2); % different parameters for each dimension
 % The targets will be the change in x and y
 l = 1; % this is the number of spike times we give (ive only tried with 1)
 % TODO: look at how to make it flexible so l can be many things
@@ -26,8 +26,8 @@ function [modelParameters, error1, error2, change1, change2] = update_weights(mo
     error1 = rmse(targets(1), outputs(1,1)); % x error
     error2 = rmse(targets(2), outputs(1,2)); % y error
     
-    change1 = inputs*(error1.*10*(1-(tanh(outputs(1,1))).^2));
-    change2 = inputs*(error2.*10*(1-(tanh(outputs(1,2))).^2));
+    change1 = inputs*(error1.*5*(1-(tanh(outputs(1,1)).^2)));
+    change2 = inputs*(error2.*5*(1-(tanh(outputs(1,2)).^2)));
 
     if(targets(1) > outputs(1,1))
         modelParameters.weights(:,1) = modelParameters.weights(:,1) + change1;
@@ -36,10 +36,10 @@ function [modelParameters, error1, error2, change1, change2] = update_weights(mo
         modelParameters.weights(:,1) = modelParameters.weights(:,1) - change1;
     end
     if(targets(2) > outputs(1,2))
-        modelParameters.weights(:,2) = modelParameters.weights(:,2) + change2;
+        modelParameters.weights(:,2) = modelParameters.weights(:,2) + change2+100;
     end
     if(targets(2) < outputs(1,2))
-        modelParameters.weights(:,2) = modelParameters.weights(:,2) - change2;
+        modelParameters.weights(:,2) = modelParameters.weights(:,2) - change2+100;
     end
     
     % this is THE KEY (it cured my week-long agony)
@@ -48,8 +48,7 @@ function [modelParameters, error1, error2, change1, change2] = update_weights(mo
 end
 
 function output = predict(modelParameters,inputs)
-    m = inputs'*modelParameters.weights(:,1:2);
-    output = m'*modelParameters.weights(:,3:4);
+    output = inputs'*modelParameters.weights;
 end
    
 function error = rmse(a, b)
